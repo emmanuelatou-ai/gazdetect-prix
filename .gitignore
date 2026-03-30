@@ -1,0 +1,31 @@
+# Secrets — NE JAMAIS committer
+backend/.env
+*.env
+
+# Base de données (données sensibles)
+backend/gazdetect.db
+backend/gazdetect.db-shm
+backend/gazdetect.db-wal
+
+# Fichiers uploadés (tarifs clients confidentiels)
+uploads/
+
+# Dépendances
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Build frontend
+frontend/dist/
+frontend/build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Script de fix temporaire
+backend/fix_reimport_gazdetect.js
