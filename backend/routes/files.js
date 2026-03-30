@@ -637,6 +637,21 @@ router.get('/:id/sheets', authenticate, (req, res) => {
   res.json(rows.map(r => r.sheet_name));
 });
 
+// Informations complémentaires d'un fichier (feuilles + stats prix)
+router.get('/:id/details', authenticate, (req, res) => {
+  const db = getDb();
+  const sheets = db.prepare(
+    "SELECT sheet_name as name, COUNT(*) as count FROM products WHERE file_id = ? AND sheet_name IS NOT NULL AND sheet_name != '' GROUP BY sheet_name ORDER BY count DESC"
+  ).all(req.params.id);
+  const stats = db.prepare(
+    "SELECT MIN(price_ht) as min_prix, MAX(price_ht) as max_prix, COUNT(DISTINCT configuration) as nb_gammes FROM products WHERE file_id = ? AND price_ht IS NOT NULL AND price_ht > 0"
+  ).get(req.params.id);
+  const lobs = db.prepare(
+    "SELECT DISTINCT json_extract(extra_fields, '$.\"LINE OF BUSINESS\"') as lob FROM products WHERE file_id = ? AND extra_fields IS NOT NULL"
+  ).all(req.params.id).map(r => r.lob).filter(Boolean);
+  res.json({ sheets, stats, lobs });
+});
+
 router.get('/', authenticate, (req, res) => {
   const files = getDb().prepare(`
     SELECT pf.id, pf.filename, pf.original_name, pf.upload_date,

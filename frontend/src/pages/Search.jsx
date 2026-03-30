@@ -548,9 +548,11 @@ function VariantRow({ p, isLast, onSelect, favIds, toggleFav, compareList, toggl
       {/* Configuration — masquée si absent du jeu de données */}
       {activeCols.configuration && (
         <td style={{ ...tdBase, color: '#64748b' }}>
-          {p.configuration
+          {p.configuration && p.configuration !== p.designation
             ? <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#475569', border: '1px solid #dde3ec' }}>{p.configuration}</span>
-            : <span style={{ color: '#94a3b8' }}>—</span>}
+            : p.description && p.description !== p.designation
+              ? <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#475569', border: '1px solid #dde3ec' }}>{p.description}</span>
+              : <span style={{ color: '#94a3b8' }}>—</span>}
         </td>
       )}
       {activeCols.unit && <td style={{ ...tdBase, color: '#64748b' }}>{p.unit || '—'}</td>}
@@ -653,9 +655,11 @@ function ProductGroup({ group, idx, onSelect, favIds, toggleFav, compareList, to
           <>
             {activeCols.configuration && (
               <td style={tdBase}>
-                {first.configuration
+                {first.configuration && first.configuration !== first.designation
                   ? <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#475569', border: '1px solid #dde3ec' }}>{first.configuration}</span>
-                  : <span style={{ color: '#94a3b8' }}>—</span>}
+                  : first.description && first.description !== first.designation
+                    ? <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#475569', border: '1px solid #dde3ec' }}>{first.description}</span>
+                    : <span style={{ color: '#94a3b8' }}>—</span>}
               </td>
             )}
             {activeCols.unit && <td style={{ ...tdBase, color: '#64748b', fontSize: 12.5 }}>{first.unit || '—'}</td>}
@@ -881,9 +885,11 @@ function LocationGroup({ group, idx, onSelect, favIds, toggleFav, compareList, t
             <>
               {activeLoc.configuration !== false && (
                 <td style={tdBase}>
-                  {first.configuration
+                  {first.configuration && first.configuration !== first.designation
                     ? <span style={{ background: '#f5e6ff', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#701a75', border: '1px solid #e879f9' }}>{first.configuration}</span>
-                    : <span style={{ color: '#94a3b8' }}>—</span>}
+                    : first.description && first.description !== first.designation
+                      ? <span style={{ background: '#f5e6ff', padding: '2px 8px', borderRadius: 10, fontSize: 12, color: '#701a75', border: '1px solid #e879f9' }}>{first.description}</span>
+                      : <span style={{ color: '#94a3b8' }}>—</span>}
                 </td>
               )}
               {activeLoc.unit !== false && <td style={{ ...tdBase, color: '#64748b', fontSize: 12.5 }}>{first.unit || '—'}</td>}

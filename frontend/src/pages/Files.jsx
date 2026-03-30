@@ -48,6 +48,23 @@ export default function Files() {
   const [filterName, setFilterName]     = useState('');
   const [filterCat, setFilterCat]       = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [expandedId, setExpandedId]     = useState(null);
+  const [details, setDetails]           = useState({});
+  const [loadingDetails, setLoadingDetails] = useState(null);
+
+  const toggleDetails = async (f) => {
+    if (expandedId === f.id) { setExpandedId(null); return; }
+    setExpandedId(f.id);
+    if (details[f.id]) return;
+    setLoadingDetails(f.id);
+    try {
+      const r = await api.get(`/files/${f.id}/details`);
+      setDetails(prev => ({ ...prev, [f.id]: r.data }));
+    } catch {}
+    setLoadingDetails(null);
+  };
+
+  const fmt = (v) => v != null ? Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' : '—';
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -229,10 +246,12 @@ export default function Files() {
                 <SortTh label="Importé par"  sKey="uploaded_by_email" />
                 <th style={thBase}>Statut</th>
                 {user?.role === 'admin' && <th style={thBase}></th>}
+                <th style={{ ...thBase, width: 40 }}></th>
               </tr>
             </thead>
             <tbody>
               {sortedFiles.map((f, i) => (
+                <>
                 <tr key={f.id} style={{ background: i % 2 === 0 ? 'white' : '#f8fafd' }}>
                   <td style={td}>
                     {renamingId === f.id ? (
@@ -296,7 +315,61 @@ export default function Files() {
                       </button>
                     </td>
                   )}
+                  <td style={{ ...td, width: 40, textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleDetails(f)}
+                      title="Informations complémentaires"
+                      style={{ background: expandedId === f.id ? '#1a3a5c' : '#f1f5f9', border: '1px solid ' + (expandedId === f.id ? '#1a3a5c' : '#dde3ec'), color: expandedId === f.id ? 'white' : '#64748b', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    >ℹ</button>
+                  </td>
                 </tr>
+                {expandedId === f.id && (
+                  <tr key={`detail-${f.id}`} style={{ background: '#f0f7ff' }}>
+                    <td colSpan={user?.role === 'admin' ? 9 : 8} style={{ padding: '16px 20px', borderBottom: '2px solid #bfdbfe' }}>
+                      {loadingDetails === f.id ? (
+                        <span style={{ color: '#64748b', fontSize: 13 }}>Chargement…</span>
+                      ) : details[f.id] ? (() => {
+                        const { sheets, stats, lobs } = details[f.id];
+                        return (
+                          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+                            {/* Feuilles */}
+                            <div style={{ flex: '2 1 300px' }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1a3a5c', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📋 Feuilles ({sheets.length})</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {sheets.map(s => (
+                                  <span key={s.name} style={{ background: 'white', border: '1px solid #bfdbfe', borderRadius: 8, padding: '3px 10px', fontSize: 12, color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                    {s.name}
+                                    <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: 10, padding: '0 6px', fontSize: 10.5, fontWeight: 600 }}>{s.count.toLocaleString('fr-FR')}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Stats prix */}
+                            <div style={{ flex: '0 0 180px' }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1a3a5c', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>💶 Fourchette de prix</div>
+                              <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.8 }}>
+                                <div>Min : <strong style={{ color: '#059669' }}>{fmt(stats?.min_prix)}</strong></div>
+                                <div>Max : <strong style={{ color: '#dc2626' }}>{fmt(stats?.max_prix)}</strong></div>
+                              </div>
+                            </div>
+                            {/* LINE OF BUSINESS */}
+                            {lobs.length > 0 && (
+                              <div style={{ flex: '1 1 180px' }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#1a3a5c', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🏭 Gammes</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                  {lobs.map(l => (
+                                    <span key={l} style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '2px 9px', fontSize: 11.5, color: '#15803d', fontWeight: 500 }}>{l}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })() : null}
+                    </td>
+                  </tr>
+                )}
+                </>
               ))}
             </tbody>
           </table>
