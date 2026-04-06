@@ -54,22 +54,29 @@ router.get('/search', authenticate, (req, res) => {
   sql += ` ORDER BY ${orderMap[sort] || 'p.reference, p.designation'} LIMIT 200`;
   const results = getDb().prepare(sql).all(...params);
 
-  // Logger la requête (debounce, Entrée, ou suggestion) — dédoublonnage 10s
-  if (req.query.log === 'true') {
-    try {
-      const db = getDb();
-      const recent = db.prepare(
-        `SELECT id FROM search_logs
-         WHERE user_id = ? AND query = ?
-           AND created_at > datetime('now', '-10 seconds')`
-      ).get(req.user.id, q.trim());
-      if (!recent) {
-        db.prepare('INSERT INTO search_logs (user_id, query, results_count) VALUES (?, ?, ?)').run(req.user.id, q.trim(), results.length);
-      }
-    } catch {}
-  }
-
   res.json(results);
+});
+
+// POST /api/products/log — enregistre une recherche uniquement quand l'utilisateur ouvre la fiche produit
+router.post('/log', authenticate, (req, res) => {
+  const { query, results_count } = req.body;
+  if (!query || query.trim().length < 1) return res.status(400).json({ error: 'Requête manquante' });
+  if (query.trim().length > 200) return res.status(400).json({ error: 'Requête trop longue' });
+  try {
+    const db = getDb();
+    // Anti-doublon : même requête dans les 30 dernières secondes
+    const recent = db.prepare(
+      `SELECT id FROM search_logs
+       WHERE user_id = ? AND query = ?
+         AND created_at > datetime('now', '-30 seconds')`
+    ).get(req.user.id, query.trim());
+    if (!recent) {
+      db.prepare('INSERT INTO search_logs (user_id, query, results_count) VALUES (?, ?, ?)').run(req.user.id, query.trim(), results_count || 0);
+    }
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 router.get('/suggest', authenticate, (req, res) => {

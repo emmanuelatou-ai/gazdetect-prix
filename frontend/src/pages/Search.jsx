@@ -1218,6 +1218,13 @@ export default function Search() {
     });
   }, [showToast]);
 
+  const logSearch = useCallback(async (q, resultsCount) => {
+    if (!q || !q.trim()) return;
+    try {
+      await api.post('/products/log', { query: q.trim(), results_count: resultsCount });
+    } catch {}
+  }, []);
+
   const doSearch = useCallback(async (q, sup, srt, log = false, fid = '', cat = '', sht = '') => {
     if (!q.trim()) { setResults([]); setSearched(false); return; }
     setLoading(true); setSearched(true); setShowSugg(false);
@@ -1228,7 +1235,6 @@ export default function Search() {
       if (fid) params.file_id    = fid;
       if (cat) params.category   = cat;
       if (sht) params.sheet_name = sht;
-      if (log) params.log = 'true';
       const { data } = await api.get('/products/search', { params });
       setResults(data);
     } catch { setResults([]); }
@@ -1247,7 +1253,7 @@ export default function Search() {
   const pickSuggestion = (s) => {
     const val = s.designation || s.reference;
     setQuery(val); setShowSugg(false); setSuggestions([]);
-    doSearch(val, filterSupplier, sort, true, filterFile, filterCategory, filterSheet);
+    doSearch(val, filterSupplier, sort, false, filterFile, filterCategory, filterSheet);
   };
 
   const onChange = (e) => {
@@ -1255,7 +1261,7 @@ export default function Search() {
     setQuery(val);
     clearTimeout(timer.current);
     clearTimeout(suggTimer.current);
-    timer.current = setTimeout(() => doSearch(val, filterSupplier, sort, true, filterFile, filterCategory, filterSheet), 400);
+    timer.current = setTimeout(() => doSearch(val, filterSupplier, sort, false, filterFile, filterCategory, filterSheet), 400);
     suggTimer.current = setTimeout(() => fetchSuggestions(val), 150);
   };
 
@@ -1318,7 +1324,7 @@ export default function Search() {
     fontSize: 13, background: 'white', cursor: 'pointer', outline: 'none', color: '#1e293b',
   };
 
-  const tableProps = { favIds, toggleFav, compareList, toggleCompare, showToast, onMention: setMentionProduct };
+  const tableProps = { favIds, toggleFav, compareList, toggleCompare, showToast, onMention: setMentionProduct, onSelect: (p) => { setSelectedProduct(p); logSearch(query, results.length); } };
 
   return (
     <div>
@@ -1516,7 +1522,7 @@ export default function Search() {
                 </div>
                 <GazEtalonTable
                   products={etalonProds}
-                  onSelect={setSelectedProduct}
+                  onSelect={(p) => { setSelectedProduct(p); logSearch(query, results.length); }}
                   favIds={favIds}
                   toggleFav={toggleFav}
                   showToast={showToast}
@@ -1533,7 +1539,7 @@ export default function Search() {
                   </h2>
                   <span style={{ background: '#fdf4ff', color: '#701a75', border: '1px solid #e879f9', padding: '2px 8px', borderRadius: 10, fontSize: 11.5, fontWeight: 600 }}>Tarifs Sem. / Mois</span>
                 </div>
-                <LocationTable groups={locGroups} onSelect={setSelectedProduct} {...tableProps} activeLoc={activeLoc} />
+                <LocationTable groups={locGroups} {...tableProps} activeLoc={activeLoc} />
               </div>
             )}
 
@@ -1547,7 +1553,7 @@ export default function Search() {
                     </h2>
                   </div>
                 )}
-                <StandardTable groups={stdGroups} onSelect={setSelectedProduct} {...tableProps} activeCols={activeCols} />
+                <StandardTable groups={stdGroups} {...tableProps} activeCols={activeCols} />
               </div>
             )}
           </>
