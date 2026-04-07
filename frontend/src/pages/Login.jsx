@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('session_expired') === '1';
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,12 @@ export default function Login() {
           <img src="/logo-gazdetect.svg" alt="GazDetect" style={{ width: 200, margin: '0 auto 16px', display: 'block' }} />
           <div className="login-subtitle">Accès au catalogue prix interne</div>
         </div>
+
+        {sessionExpired && !error && (
+          <div className="message error" style={{ marginBottom: 16 }}>
+            <span>⚠️</span> Votre session a expiré. Veuillez vous reconnecter.
+          </div>
+        )}
 
         {error && (
           <div className="message error" style={{ marginBottom: 16 }}>

@@ -33,8 +33,8 @@ export default function Users() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setFormError('');
-    if (form.password.length < 6) {
-      setFormError('Le mot de passe doit contenir au moins 6 caractères');
+    if (form.password.length < 8) {
+      setFormError('Le mot de passe doit contenir au moins 8 caractères');
       return;
     }
     setSaving(true);
@@ -159,7 +159,7 @@ export default function Users() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Mot de passe * (min. 6 caractères)</label>
+                  <label className="form-label">Mot de passe * (min. 8 caractères)</label>
                   <input
                     type="password"
                     className="form-input"

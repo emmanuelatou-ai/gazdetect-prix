@@ -19,7 +19,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('gd_token');
       localStorage.removeItem('gd_user');
-      window.location.href = '/login';
+      window.location.href = '/login?session_expired=1';
     }
     return Promise.reject(err);
   }
