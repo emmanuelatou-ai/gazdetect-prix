@@ -47,10 +47,10 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, // ne compte pas les connexions réussies
 });
 
-// Limite sur les uploads : 20 fichiers/heure par IP
+// Limite sur les uploads : 100 fichiers/heure par IP
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Limite d\'upload atteinte. Réessayez dans 1 heure.' },
