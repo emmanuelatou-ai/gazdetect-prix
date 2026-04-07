@@ -110,6 +110,17 @@ pm2 start server.js \
 pm2 save
 pm2 startup systemd -u root --hp /root 2>/dev/null | tail -1 | bash 2>/dev/null || true
 
+# ── Backup automatique quotidien via cron ─────────────────────────────────
+echo "[+] Configuration du backup automatique (quotidien à 2h00)..."
+cp "$APP_DIR/backup.sh" /usr/local/bin/gazdetect-backup.sh
+chmod +x /usr/local/bin/gazdetect-backup.sh
+
+CRON_JOB="0 2 * * * /usr/local/bin/gazdetect-backup.sh >> /var/log/gazdetect-backup.log 2>&1"
+( crontab -l 2>/dev/null | grep -v gazdetect-backup; echo "$CRON_JOB" ) | crontab -
+echo "  ✓ Cron installé : backup chaque nuit à 2h00"
+echo "  ✓ Sauvegardes dans : /var/www/backups/gazdetect/"
+echo "  ✓ Logs backup : /var/log/gazdetect-backup.log"
+
 # ── Résumé ────────────────────────────────────────────────────────────────────
 VPS_IP=$(curl -s ifconfig.me 2>/dev/null || echo "<IP_VPS>")
 echo ""

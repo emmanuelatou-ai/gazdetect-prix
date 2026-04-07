@@ -784,6 +784,16 @@ router.patch('/:id/rename', authenticate, requireAdmin, (req, res) => {
   res.json({ id: file.id, original_name: name.trim() });
 });
 
+// ── Téléchargement de la base de données (admin uniquement) ──────────────────
+router.get('/admin/backup-db', authenticate, requireAdmin, (req, res) => {
+  const dbPath = path.join(__dirname, '../gazdetect.db');
+  if (!fs.existsSync(dbPath)) {
+    return res.status(404).json({ error: 'Fichier DB introuvable' });
+  }
+  const date = new Date().toISOString().slice(0, 10);
+  res.download(dbPath, `gazdetect_backup_${date}.db`);
+});
+
 router.delete('/:id', authenticate, requireAdmin, (req, res) => {
   const db = getDb();
   const file = db.prepare('SELECT * FROM price_files WHERE id = ?').get(req.params.id);
